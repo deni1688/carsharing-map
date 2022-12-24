@@ -1,0 +1,76 @@
+{
+    "vehicles": [
+        {
+            "id": 1,
+            "brand": "Audi",
+            "model": "A4",
+            "year": 2015,
+            "available": true,
+            "position": [48.16738217352159, 11.78838062502248]
+        },
+        {
+            "id": 2,
+            "brand": "BMW",
+            "model": "X5",
+            "year": 2017,
+            "available": true,
+            "position": [48.145987855993816, 11.507601214981635]
+        },
+        {
+            "id": 3,
+            "brand": "Mercedes",
+            "model": "C200",
+            "year": 2016,
+            "available": true,
+            "position": [48.21741009899092, 11.588625382627379]
+        },
+        {
+            "id": 4,
+            "brand": "Tesla",
+            "model": "Model S",
+            "year": 2018,
+            "available": true,
+            "position": [48.842915377936066, 9.181417896854299]
+        },
+        {
+            "id": 5,
+            "brand": "Volkswagen",
+            "model": "Golf",
+            "year": 2020,
+            "available": true,
+            "position": [48.798609689498214, 9.180044605877246]
+        },
+        {
+            "id": 6,
+            "brand": "Volkswagen",
+            "model": "Up",
+            "year": 2017,
+            "available": true,
+            "position": [48.81308115940272, 9.215750171280455]
+        },
+        {
+            "id": 7,
+            "brand": "Range Rover",
+            "model": "Evoque",
+            "year": 2019,
+            "available": true,
+            "position": [49.4535859983521, 11.078107099384594]
+        },
+        {
+            "id": 8,
+            "brand": "Audi",
+            "model": "A3",
+            "year": 2020,
+            "available": true,
+            "position": [49.44213662737634, 11.080127991439067]
+        },
+        {
+            "id": 9,
+            "brand": "Citroen",
+            "model": "C3",
+            "year": 2018,
+            "available": true,
+            "position": [49.45658866940552, 11.015170746831014]
+        }    
+    ]
+}
