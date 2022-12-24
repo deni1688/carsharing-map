@@ -8,11 +8,11 @@ const sc = new Supercluster({ radius: 40, maxZoom: 20 });
 const containerStyle = { width: '100%', height: '500px' };
 const center = { lat: 48.766666, lng: 11.433333 };
 const options = {
-    streetViewControl: false, 
-    mapTypeControl: false, 
+    streetViewControl: false,
+    mapTypeControl: false,
     fullscreenControl: false,
-    styles: mapStyles, 
-    maxZoom: 20, 
+    styles: mapStyles,
+    maxZoom: 20,
     minZoom: 6
 };
 
@@ -65,6 +65,12 @@ function App() {
         </div>;
     }
 
+    if (isLoading) {
+        return <div className="container pt-5">
+            <h2 className="text-center">Loading...</h2>
+        </div>;
+    }
+
     function handleClusterClick({ id, lat, lng }: { id: number, lat: number, lng: number }) {
         const expansionZoom = Math.min(sc.getClusterExpansionZoom(id), 20);
         mapRef.current?.setZoom(expansionZoom);
@@ -92,39 +98,34 @@ function App() {
         <div className="container pt-5">
             <h1>CarSharing Map</h1>
             <div className="col-12">
-                {isLoading
-                    ? <h2>Loading...</h2>
-                    : <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-                        <GoogleMap
-                            onLoad={handleMapLoad}
-                            onBoundsChanged={handleBoundsChanged}
-                            onZoomChanged={handleZoomChanged}
-                            mapContainerStyle={containerStyle}
-                            options={options}
-                            center={center}
-                            zoom={zoom}
-                        >
-                            {cluster?.map(cluster => {
-                                const [lng, lat] = cluster.geometry.coordinates;
-                                const { cluster: isCluster, point_count: pointCount } = cluster.properties;
+                <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+                    <GoogleMap
+                        onLoad={handleMapLoad}
+                        onBoundsChanged={handleBoundsChanged}
+                        onZoomChanged={handleZoomChanged}
+                        mapContainerStyle={containerStyle}
+                        options={options}
+                        center={center}
+                        zoom={zoom}
+                    >
+                        {cluster?.map(({id, geometry, properties}) => {
+                            const [lng, lat] = geometry.coordinates;
+                            const { cluster: isCluster, point_count: pointCount } = properties;
 
-                                if (isCluster) {
-                                    return <MarkerF
-                                        key={`cluster-${cluster.id}`}
-                                        onClick={() => handleClusterClick({ id: cluster.id as number, lat, lng })}
-                                        position={{ lat, lng }}
-                                        icon="/images/cluster-pin.png"
-                                        label={getLabel(pointCount)} />
-                                }
-
-                                return <MarkerF
-                                    key={`vehicle-${cluster.properties.id}`}
+                            return isCluster
+                                ? <MarkerF
+                                    key={`cluster-${id}`}
+                                    onClick={() => handleClusterClick({ id: id as number, lat, lng })}
+                                    position={{ lat, lng }}
+                                    icon="/images/cluster-pin.png"
+                                    label={getLabel(pointCount)} />
+                                : <MarkerF
+                                    key={`vehicle-${properties.id}`}
                                     position={{ lat, lng }}
                                     icon="/images/cs-pin.png" />
-                            })}
-                        </GoogleMap>
-                    </LoadScript>
-                }
+                        })}
+                    </GoogleMap>
+                </LoadScript>
             </div>
         </div>
     )
