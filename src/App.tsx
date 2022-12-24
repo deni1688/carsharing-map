@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { LoadScript, GoogleMap, MarkerF } from '@react-google-maps/api';
+import { LoadScript, GoogleMap, MarkerF, OverlayViewF, OverlayView } from '@react-google-maps/api';
 import Supercluster, { ClusterFeature, PointFeature } from 'supercluster';
 import useSWR from 'swr';
 import mapStyles from './mapStyles.json';
 
-const sc = new Supercluster({ radius: 40, maxZoom: 20 });
 const containerStyle = { width: '100%', height: '500px' };
 const center = { lat: 48.766666, lng: 11.433333 };
 const options = {
@@ -15,6 +14,8 @@ const options = {
     maxZoom: 20,
     minZoom: 6
 };
+
+const sc = new Supercluster({ radius: 40, maxZoom: options.maxZoom });
 
 type Map = google.maps.Map & { zoom: number };
 
@@ -48,14 +49,14 @@ function getLabel(pointCount: number): google.maps.MarkerLabel {
 function App() {
     const [zoom, setZoom] = useState<number>(options.minZoom);
     const [bounds, setBounds] = useState<GeoJSON.BBox>([0, 0, 0, 0]);
-    const [cluster, setCluster] = useState<ClusterFeature<any>[]>();
+    const [clusters, setClusters] = useState<ClusterFeature<any>[]>();
     const mapRef = useRef<Map>();
     const { data, error, isLoading } = useSWR('vehicles', fetcher);
 
     useEffect(() => {
         if (data?.length && mapRef.current) {
             sc.load(formatDataToGeoJsonPoints(data) as PointFeature<GeoJSON.Feature<GeoJSON.Point>>[]);
-            setCluster(sc.getClusters(bounds, zoom));
+            setClusters(sc.getClusters(bounds, zoom));
         }
     }, [data, bounds, zoom]);
 
@@ -108,7 +109,7 @@ function App() {
                         center={center}
                         zoom={zoom}
                     >
-                        {cluster?.map(({id, geometry, properties}) => {
+                        {clusters?.map(({ id, geometry, properties }) => {
                             const [lng, lat] = geometry.coordinates;
                             const { cluster: isCluster, point_count: pointCount } = properties;
 
@@ -119,16 +120,30 @@ function App() {
                                     position={{ lat, lng }}
                                     icon="/images/cluster-pin.png"
                                     label={getLabel(pointCount)} />
-                                : <MarkerF
+                                : <CustomMarker
                                     key={`vehicle-${properties.id}`}
-                                    position={{ lat, lng }}
-                                    icon="/images/cs-pin.png" />
+                                    position={{ lat, lng }} />
                         })}
                     </GoogleMap>
                 </LoadScript>
             </div>
         </div>
     )
+}
+
+function getPixelPositionOffset(width, height) {
+    return {x: -(width / 2), y: -(height / 2)};
+}
+
+function CustomMarker({ position }) {
+    return <OverlayViewF
+        position={position}
+        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+        getPixelPositionOffset={getPixelPositionOffset}>
+        <button className="btn btn-none" onClick={() => alert(Object.values(position))}>
+            <img src="/images/cs-pin.png" alt="CarSharing Pin" />
+        </button>
+    </OverlayViewF>
 }
 
 export default App
