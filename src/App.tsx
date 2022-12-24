@@ -39,29 +39,33 @@ const fetcher = (resource: string) => fetch(`http://localhost:3000/${resource}`)
 function App() {
     const [zoom, setZoom] = useState(options.minZoom);
 
-    const { data, error } = useSWR('vehicles', fetcher);
+    const { data, error, isLoading } = useSWR('vehicles', fetcher);
 
-    if (error) return <div>failed to load</div>;
-
-    if (!data) return <div>loading...</div>;
+    if (error) {
+        return <div className="container pt-5">Error loading data</div>;
+    }
 
     return (
         <div className="container pt-5">
             <h1>CarSharing Map</h1>
             <div className="col-12">
-                <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-                    <GoogleMap
-                        mapContainerStyle={containerStyle}
-                        options={options}
-                        center={center}
-                        zoom={zoom}
-                    >
-                        {data.map(vehicle => <MarkerF
-                                key={vehicle.id}
-                                position={{ lat: vehicle.position[0], lng: vehicle.position[1] }} />
-                        )}
-                    </GoogleMap>
-                </LoadScript>
+                {
+                    isLoading
+                        ? <h2>Loading...</h2>
+                        : <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+                            <GoogleMap
+                                mapContainerStyle={containerStyle}
+                                options={options}
+                                center={center}
+                                zoom={zoom}
+                            >
+                                {data?.map(vehicle => <MarkerF
+                                    key={vehicle.id}
+                                    position={{ lat: vehicle.position[0], lng: vehicle.position[1] }} />
+                                )}
+                            </GoogleMap>
+                        </LoadScript>
+                }
             </div>
         </div>
     )
