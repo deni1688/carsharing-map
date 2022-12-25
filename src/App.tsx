@@ -42,7 +42,7 @@ function formatDataToGeoJsonPoints(data: Vehicle[]): GeoJSON.Feature<GeoJSON.Poi
 }
 
 function getLabel(pointCount: number): google.maps.MarkerLabel {
-    return { text: pointCount.toString(), color: '#fff' };
+    return { text: pointCount.toString(), color: '#353535', fontWeight: 'bold' };
 }
 
 
@@ -135,19 +135,19 @@ function App() {
     )
 }
 
-function getPixelPositionOffset(width, height) {
+function getPixelPositionOffset(width: number, height: number) {
     return { x: -(width / 2), y: -(height / 2) };
 }
 
-function CustomMarker({ position, brand, model, year, available }) {
+function CustomMarker({ position, brand, model, year, available }: { position: google.maps.LatLngLiteral, brand: string, model: string, year: number, available: boolean }) {
     const [visible, setVisible] = useState(false);
 
     return <OverlayViewF
         position={position}
         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
         getPixelPositionOffset={getPixelPositionOffset}>
-        <button className={`btn btn-none ${!visible ? 'd-none' : 'd-inline-block'}`} onClick={() => setVisible(false)}>
-            <div className={'card card-body p-1'}>
+        <button className={`btn btn-none ${!visible ? 'd-none' : 'd-block'}`} onClick={() => setVisible(false)}>
+            <div className={'card card-body p-2'}>
                 <h6 className="card-title">{brand} {model} ({year})</h6>
                 <button className={`btn btn-${available ? 'success' : 'warning'} btn-sm btn-block`}>
                     {available ? 'Available to Drive' : 'Book for Later'}

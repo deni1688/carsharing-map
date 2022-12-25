@@ -13,7 +13,7 @@
             "brand": "BMW",
             "model": "X5",
             "year": 2017,
-            "available": true,
+            "available": false,
             "position": [48.145987855993816, 11.507601214981635]
         },
         {
@@ -21,7 +21,7 @@
             "brand": "Mercedes",
             "model": "C200",
             "year": 2016,
-            "available": true,
+            "available": false,
             "position": [48.21741009899092, 11.588625382627379]
         },
         {
@@ -53,7 +53,7 @@
             "brand": "Range Rover",
             "model": "Evoque",
             "year": 2019,
-            "available": true,
+            "available": false,
             "position": [49.4535859983521, 11.078107099384594]
         },
         {
@@ -61,7 +61,7 @@
             "brand": "Audi",
             "model": "A3",
             "year": 2020,
-            "available": true,
+            "available": false,
             "position": [49.44213662737634, 11.080127991439067]
         },
         {
