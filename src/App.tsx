@@ -111,7 +111,7 @@ function App() {
                     >
                         {clusters?.map(({ id, geometry, properties }) => {
                             const [lng, lat] = geometry.coordinates;
-                            const { cluster: isCluster, point_count: pointCount } = properties;
+                            const { cluster: isCluster, point_count: pointCount, brand, model, year, available } = properties;
 
                             return isCluster
                                 ? <MarkerF
@@ -122,7 +122,11 @@ function App() {
                                     label={getLabel(pointCount)} />
                                 : <CustomMarker
                                     key={`vehicle-${properties.id}`}
-                                    position={{ lat, lng }} />
+                                    position={{ lat, lng }}
+                                    brand={brand}
+                                    model={model}
+                                    year={year}
+                                    available={available} />
                         })}
                     </GoogleMap>
                 </LoadScript>
@@ -132,15 +136,25 @@ function App() {
 }
 
 function getPixelPositionOffset(width, height) {
-    return {x: -(width / 2), y: -(height / 2)};
+    return { x: -(width / 2), y: -(height / 2) };
 }
 
-function CustomMarker({ position }) {
+function CustomMarker({ position, brand, model, year, available }) {
+    const [visible, setVisible] = useState(false);
+
     return <OverlayViewF
         position={position}
         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
         getPixelPositionOffset={getPixelPositionOffset}>
-        <button className="btn btn-none" onClick={() => alert(Object.values(position))}>
+        <button className={`btn btn-none ${!visible ? 'd-none' : 'd-inline-block'}`} onClick={() => setVisible(false)}>
+            <div className={'card card-body p-1'}>
+                <h6 className="card-title">{brand} {model} ({year})</h6>
+                <button className={`btn btn-${available ? 'success' : 'warning'} btn-sm btn-block`}>
+                    {available ? 'Available to Drive' : 'Book for Later'}
+                </button>
+            </div>
+        </button>
+        <button className={`btn btn-none ${visible ? 'd-none' : 'd-inline-block'}`} onClick={() => setVisible(true)}>
             <img src="/images/cs-pin.png" alt="CarSharing Pin" />
         </button>
     </OverlayViewF>
