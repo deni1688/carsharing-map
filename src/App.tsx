@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { LoadScript, GoogleMap, MarkerF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import { LoadScript, GoogleMap, MarkerF, OverlayViewF, OverlayView, useJsApiLoader } from '@react-google-maps/api';
 import Supercluster, { ClusterFeature, PointFeature } from 'supercluster';
 import useSWR from 'swr';
 import mapStyles from './mapStyles.json';
@@ -47,11 +47,12 @@ function getLabel(pointCount: number): google.maps.MarkerLabel {
 
 
 function App() {
+    const {isLoaded: isMapLoaded} = useJsApiLoader({googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY});
     const [zoom, setZoom] = useState<number>(options.minZoom);
     const [bounds, setBounds] = useState<GeoJSON.BBox>([0, 0, 0, 0]);
     const [clusters, setClusters] = useState<ClusterFeature<any>[]>();
     const mapRef = useRef<Map>();
-    const { data, error, isLoading } = useSWR('vehicles', fetcher);
+    const { data, error, isLoading: isDataLoading } = useSWR('vehicles', fetcher);
 
     useEffect(() => {
         if (data?.length && mapRef.current) {
@@ -61,16 +62,14 @@ function App() {
     }, [data, bounds, zoom]);
 
     if (error) {
-        return <div className="container pt-5">
-            <h2 className="text-center">Error loading data</h2>
-        </div>;
+        return <div className="container pt-5"><h2 className="text-center">Error loading data</h2></div>;
     }
 
-    if (isLoading) {
-        return <div className="container pt-5">
-            <h2 className="text-center">Loading...</h2>
-        </div>;
+    if (isDataLoading) {
+        return <div className="container pt-5"><h2 className="text-center">Loading...</h2></div>;
     }
+
+    if (!isMapLoaded) return null;
 
     function handleClusterClick({ id, lat, lng }: { id: number, lat: number, lng: number }) {
         const expansionZoom = Math.min(sc.getClusterExpansionZoom(id), 20);
@@ -97,39 +96,36 @@ function App() {
 
     return (
         <div className="container pt-5">
-            <h1>CarSharing Map</h1>
             <div className="col-12">
-                <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-                    <GoogleMap
-                        onLoad={handleMapLoad}
-                        onBoundsChanged={handleBoundsChanged}
-                        onZoomChanged={handleZoomChanged}
-                        mapContainerStyle={containerStyle}
-                        options={options}
-                        center={center}
-                        zoom={zoom}
-                    >
-                        {clusters?.map(({ id, geometry, properties }) => {
-                            const [lng, lat] = geometry.coordinates;
-                            const { cluster: isCluster, point_count: pointCount, brand, model, year, available } = properties;
+                <GoogleMap
+                    onLoad={handleMapLoad}
+                    onBoundsChanged={handleBoundsChanged}
+                    onZoomChanged={handleZoomChanged}
+                    mapContainerStyle={containerStyle}
+                    options={options}
+                    center={center}
+                    zoom={zoom}
+                >
+                    {clusters?.map(({ id, geometry, properties }) => {
+                        const [lng, lat] = geometry.coordinates;
+                        const { cluster, point_count, brand, model, year, available } = properties;
 
-                            return isCluster
-                                ? <MarkerF
-                                    key={`cluster-${id}`}
-                                    onClick={() => handleClusterClick({ id: id as number, lat, lng })}
-                                    position={{ lat, lng }}
-                                    icon="/images/cluster-pin.png"
-                                    label={getLabel(pointCount)} />
-                                : <CustomMarker
-                                    key={`vehicle-${properties.id}`}
-                                    position={{ lat, lng }}
-                                    brand={brand}
-                                    model={model}
-                                    year={year}
-                                    available={available} />
-                        })}
-                    </GoogleMap>
-                </LoadScript>
+                        return cluster
+                            ? <MarkerF
+                                key={`cluster-${id}`}
+                                onClick={() => handleClusterClick({ id: id as number, lat, lng })}
+                                position={{ lat, lng }}
+                                icon="/images/cluster-pin.png"
+                                label={getLabel(point_count)} />
+                            : <VehicleMarker
+                                key={`vehicle-${properties.id}`}
+                                position={{ lat, lng }}
+                                brand={brand}
+                                model={model}
+                                year={year}
+                                available={available} />
+                    })}
+                </GoogleMap>
             </div>
         </div>
     )
@@ -139,22 +135,27 @@ function getPixelPositionOffset(width: number, height: number) {
     return { x: -(width / 2), y: -(height / 2) };
 }
 
-function CustomMarker({ position, brand, model, year, available }: { position: google.maps.LatLngLiteral, brand: string, model: string, year: number, available: boolean }) {
+function VehicleMarker({ position, brand, model, year, available }: { position: google.maps.LatLngLiteral, brand: string, model: string, year: number, available: boolean }) {
     const [visible, setVisible] = useState(false);
 
     return <OverlayViewF
         position={position}
         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
         getPixelPositionOffset={getPixelPositionOffset}>
-        <button className={`btn btn-none ${!visible ? 'd-none' : 'd-block'}`} onClick={() => setVisible(false)}>
-            <div className={'card card-body p-2'}>
-                <h6 className="card-title">{brand} {model} ({year})</h6>
-                <button className={`btn btn-${available ? 'success' : 'warning'} btn-sm btn-block`}>
-                    {available ? 'Available to Drive' : 'Book for Later'}
+        <div className={`card ${visible ? 'd-block' : 'd-none'}`} style={{right: '38%', minWidth: 250, zIndex: 1000, marginTop: -175}}>
+            <div className="card-header bg-secondary p-1">
+                <img src={`https://via.placeholder.com/250x100?text=${brand}+${model}+${year}`} />
+                <h6 className="mt-1 mb-0">{brand} {model} - {year}</h6>
+            </div>
+            <div className="card-body d-flex p-1">
+                <button className="btn btn-sm btn-secondary w-50 p-0" onClick={() => setVisible(false)}>Close</button>
+                <div style={{width: 4}}/>
+                <button className={`btn btn-sm btn-${available ? 'success' : 'warning'} text-light w-50 p-0`}>
+                    {available ? 'Book' : 'Reserved'}
                 </button>
             </div>
-        </button>
-        <button className={`btn btn-none ${visible ? 'd-none' : 'd-inline-block'}`} onClick={() => setVisible(true)}>
+        </div>
+        <button className={`btn btn-none`} onClick={() => setVisible(true)}>
             <img src="/images/cs-pin.png" alt="CarSharing Pin" />
         </button>
     </OverlayViewF>
