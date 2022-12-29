@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { LoadScript, GoogleMap, MarkerF, OverlayViewF, OverlayView, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, MarkerF, OverlayViewF, OverlayView, useJsApiLoader } from '@react-google-maps/api';
 import Supercluster, { ClusterFeature, PointFeature } from 'supercluster';
 import useSWR from 'swr';
 import mapStyles from './mapStyles.json';
