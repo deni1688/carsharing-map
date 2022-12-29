@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, OverlayViewF, OverlayView, useJsApiLoader } from '@react-google-maps/api';
 import Supercluster, { ClusterFeature, PointFeature } from 'supercluster';
 import useSWR from 'swr';
+
 import mapStyles from './mapStyles.json';
 
 const containerStyle = { width: '100%', height: '500px' };
@@ -28,7 +29,7 @@ interface Vehicle {
     position: number[];
 }
 
-function fetcher(resource: string) {
+function fetcher(resource: string): Promise<Vehicle[]> {
     return fetch(`http://localhost:3000/${resource}`)
         .then((res) => res.json()) as Promise<Vehicle[]>
 };
@@ -131,27 +132,37 @@ function App() {
     )
 }
 
-function getPixelPositionOffset(width: number, height: number) {
+type VehicleMarkerProps = {
+    position: google.maps.LatLngLiteral, brand: string, model: string, year: number, available: boolean
+};
+
+const vehicleMarkerStyle = {right: '38%', minWidth: 250, zIndex: 1000, marginTop: -175};
+
+function getPixelPositionOffset(width: number, height: number): { x: number, y: number } {
     return { x: -(width / 2), y: -(height / 2) };
 }
 
-function VehicleMarker({ position, brand, model, year, available }: { position: google.maps.LatLngLiteral, brand: string, model: string, year: number, available: boolean }) {
+function VehicleMarker({ position, brand, model, year, available }: VehicleMarkerProps ) {
     const [visible, setVisible] = useState(false);
+    const buttonClass = available ? 'success' : 'warning';
+    const buttonText = available ? 'Book' : 'Reserved';
 
     return <OverlayViewF
         position={position}
         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
         getPixelPositionOffset={getPixelPositionOffset}>
-        <div className={`card ${visible ? 'd-block' : 'd-none'}`} style={{right: '38%', minWidth: 250, zIndex: 1000, marginTop: -175}}>
+        <div className={`card ${visible ? 'd-block' : 'd-none'}`} style={vehicleMarkerStyle}>
             <div className="card-header bg-secondary p-1">
                 <img src={`https://via.placeholder.com/250x100?text=${brand}+${model}+${year}`} />
                 <h6 className="mt-1 mb-0">{brand} {model} - {year}</h6>
             </div>
             <div className="card-body d-flex p-1">
-                <button className="btn btn-sm btn-secondary w-50 p-0" onClick={() => setVisible(false)}>Close</button>
+                <button className="btn btn-sm btn-secondary w-50 p-0" onClick={() => setVisible(false)}>
+                    Close
+                </button>
                 <div style={{width: 4}}/>
-                <button className={`btn btn-sm btn-${available ? 'success' : 'warning'} text-light w-50 p-0`}>
-                    {available ? 'Book' : 'Reserved'}
+                <button className={`btn btn-sm btn-${buttonClass} text-light w-50 p-0`}>
+                    {buttonText}
                 </button>
             </div>
         </div>
